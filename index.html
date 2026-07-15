@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eat It Up</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="overlay" class="overlay">
+        <h1>Eat It Up</h1>
+        <p>입을 벌려 건강한 음식을 먹고, 정크푸드는 피하세요.</p>
+        <button id="start-btn" type="button">카메라 켜고 시작</button>
+        <p id="status-msg" class="status-msg" hidden></p>
+      </div>
+      <video id="webcam" playsinline muted hidden></video>
+      <canvas id="game" width="640" height="480"></canvas>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

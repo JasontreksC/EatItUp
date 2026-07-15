@@ -1,0 +1,90 @@
+:root {
+  color-scheme: dark;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  background: #0b0d10;
+  color: #f4f6f8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top, #1a2433 0%, transparent 45%),
+    #0b0d10;
+}
+
+#app {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+#game {
+  width: min(100%, 960px);
+  aspect-ratio: 640 / 480;
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-content: center;
+  gap: 12px;
+  padding: 32px;
+  text-align: center;
+  background: rgba(8, 10, 14, 0.84);
+  backdrop-filter: blur(8px);
+}
+
+.overlay[hidden] {
+  display: none;
+}
+
+.overlay h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  letter-spacing: -0.04em;
+}
+
+.overlay p {
+  margin: 0;
+  max-width: 28rem;
+  line-height: 1.5;
+  color: rgba(244, 246, 248, 0.78);
+}
+
+#start-btn {
+  justify-self: center;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font: inherit;
+  font-weight: 700;
+  color: #0b0d10;
+  background: #8ef0a4;
+  cursor: pointer;
+}
+
+#start-btn:hover {
+  filter: brightness(1.05);
+}
+
+#start-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.status-msg {
+  color: #ff8f8f;
+}
