@@ -6,6 +6,12 @@
     <title>Eat It Up</title>
   </head>
   <body>
+    <!--
+      구조:
+        overlay  — 시작 전 안내/버튼 (main.ts가 숨김)
+        webcam   — 숨겨진 비디오. MediaPipe 입력 + 캔버스 배경 소스
+        game     — 실제 그려지는 캔버스. 게임 루프는 src/game.ts 의 frame()
+    -->
     <div id="app">
       <div id="overlay" class="overlay">
         <h1>Eat It Up</h1>
