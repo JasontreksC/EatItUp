@@ -4,23 +4,38 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Eat It Up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Orbitron:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <!--
       구조:
-        overlay  — 시작 전 안내/버튼 (main.ts가 숨김)
-        webcam   — 숨겨진 비디오. MediaPipe 입력 + 캔버스 배경 소스
-        game     — 실제 그려지는 캔버스. 게임 루프는 src/game.ts 의 frame()
+        overlay   — 시작 전 안내/버튼
+        webcam    — 숨겨진 비디오 (인식 + 배경 소스)
+        stage     — 캔버스 + 게임 UI 오버레이
     -->
     <div id="app">
       <div id="overlay" class="overlay">
         <h1>Eat It Up</h1>
-        <p>입을 벌려 건강한 음식을 먹고, 정크푸드는 피하세요.</p>
+        <p>얼굴을 비추면 플레이가 시작됩니다. 최대 3명, 입을 벌려 건강한 음식을 먹으세요.</p>
         <button id="start-btn" type="button">카메라 켜고 시작</button>
         <p id="status-msg" class="status-msg" hidden></p>
       </div>
+
       <video id="webcam" playsinline muted hidden></video>
-      <canvas id="game" width="640" height="480"></canvas>
+
+      <div id="stage" class="stage">
+        <canvas id="game" width="640" height="480"></canvas>
+        <div id="ui-layer" class="ui-layer">
+          <!-- 머리 위를 추적하는 점수 카드 레이어 -->
+          <div id="scoreboard" class="scoreboard" aria-live="polite"></div>
+          <div id="fx-root" class="fx-root"></div>
+        </div>
+      </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

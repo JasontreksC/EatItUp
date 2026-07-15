@@ -3,20 +3,22 @@
  *
  * 상태 머신에 가깝게 동작한다:
  *  1) floating  : 오른쪽으로 스폰 → 왼쪽으로 흘러감
- *  2) eatingUp  : 입 근처 + 입 벌림 → 입으로 빨려가며 축소
+ *  2) eatingUp  : 어떤 Eater 의 열린 입 근처 → 그 입으로 빨려가며 축소
  *  3) eaten/waste 이벤트 → Game이 풀에서 제거
  *
  * update()는 이벤트를 "예약"만 하고, Game이 consumeEvent()로 꺼낸다.
- * (예전 pygame.event.post 패턴을 웹에 맞게 단순화한 것)
  */
 
-import type { Vec2 } from "./face";
+import type { Eater } from "./eater";
+import { distance, lerp, randomInt, vec2, type Vec2 } from "./math";
 
-export type FoodEvent = { type: "eaten" | "waste"; food: Food };
+export type FoodEvent =
+  | { type: "eaten"; food: Food; eater: Eater | null }
+  | { type: "waste"; food: Food };
 
 export class Food {
   readonly foodName: string;
-  /** +1 건강 / -1 정크. 먹혔을 때 점수에 더해짐 */
+  /** +1 건강 / -1 정크. 먹혔을 때 해당 Eater 점수에 더해짐 */
   readonly healthy: number;
   /** 왼쪽으로 흘러가는 속도 (px/초) */
   readonly floatingSpeed: number;
@@ -33,6 +35,8 @@ export class Food {
   /** 현재 그릴 크기. 먹을 때 점점 작아짐 */
   currentSize: number;
 
+  /** 흡입을 시작한 Eater. 연출 동안 이 입을 따라간다. */
+  private targetEater: Eater | null = null;
   /** 흡입 연출 총 길이 (초) */
   private readonly tweenSizeTime = 0.5;
   /** update()에서 세팅 → Game.updateFoods()가 consumeEvent()로 수거 */
@@ -53,35 +57,34 @@ export class Food {
     this.currentSize = size;
     this.healthy = healthy;
     this.floatingSpeed = floatingSpeed;
-    this.centerPos = {
-      x: spawnX,
-      y: randomInt(spawnYRange[0], spawnYRange[1]),
-    };
+    this.centerPos = vec2(spawnX, randomInt(spawnYRange[0], spawnYRange[1]));
   }
 
   /**
    * 매 프레임 호출되는 음식 로직.
    * @param deltaTime 경과 초
-   * @param mouthCenter 현재 입 중심 (거울 좌표)
-   * @param isMouthOpen jawOpen이 임계값 초과인지
+   * @param eaters 현재 살아있는 플레이어들
    */
-  update(deltaTime: number, mouthCenter: Vec2, isMouthOpen: boolean): void {
-    // 매 프레임 이벤트를 새로 판정 (지난 프레임 잔여 이벤트 제거)
+  update(deltaTime: number, eaters: readonly Eater[]): void {
     this.pendingEvent = null;
 
-    // --- 흡입 중: 입 쪽으로 끌어당기며 축소 ---
+    // --- 흡입 중: 대상 Eater 입 쪽으로 끌어당기며 축소 ---
     if (this.isEatingUp) {
       this.tweenTimer = Math.max(this.tweenTimer - deltaTime, 0);
 
-      // 입 방향으로 보간 이동 (원본 Python: center += (mouth - center) * dt)
-      this.centerPos.x += (mouthCenter.x - this.centerPos.x) * deltaTime;
-      this.centerPos.y += (mouthCenter.y - this.centerPos.y) * deltaTime;
+      const mouth = this.resolveTargetMouth(eaters);
+      if (mouth) {
+        this.centerPos = lerp(this.centerPos, mouth, deltaTime);
+      }
 
-      // 남은 시간에 비례해 크기 감소 (1 → 0)
       this.currentSize = this.size * (this.tweenTimer / this.tweenSizeTime);
 
       if (this.tweenTimer <= 0.01) {
-        this.pendingEvent = { type: "eaten", food: this };
+        this.pendingEvent = {
+          type: "eaten",
+          food: this,
+          eater: this.targetEater,
+        };
       }
       return;
     }
@@ -89,14 +92,15 @@ export class Food {
     // --- 평소: 왼쪽으로 표류 ---
     this.centerPos.x -= this.floatingSpeed * deltaTime;
 
-    // 화면 왼쪽 밖으로 완전히 나가면 낭비 처리
-    if (this.centerPos.x < this.size / 2 * -1) {
+    if (this.centerPos.x < (this.size / 2) * -1) {
       this.pendingEvent = { type: "waste", food: this };
       return;
     }
 
-    // 입과의 거리가 50px 이내이고 입을 벌리고 있으면 흡입 시작
-    if (distance(this.centerPos, mouthCenter) <= 50 && isMouthOpen) {
+    // 입을 벌린 Eater 중 가까운 사람이 있으면 흡입 시작
+    const eater = this.findEatingEater(eaters);
+    if (eater) {
+      this.targetEater = eater;
       this.tweenTimer = this.tweenSizeTime;
       this.isEatingUp = true;
     }
@@ -111,7 +115,7 @@ export class Food {
 
   /** 중심 기준으로 정사각 스프라이트 그리기 */
   draw(ctx: CanvasRenderingContext2D): void {
-    const size = Math.max(this.currentSize, 0.1); // 0이면 drawImage 오류 방지
+    const size = Math.max(this.currentSize, 0.1);
     ctx.drawImage(
       this.image,
       this.centerPos.x - size / 2,
@@ -120,15 +124,27 @@ export class Food {
       size,
     );
   }
-}
 
-function distance(a: Vec2, b: Vec2): number {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  return Math.hypot(dx, dy);
-}
+  private resolveTargetMouth(eaters: readonly Eater[]): Vec2 | null {
+    if (this.targetEater && eaters.includes(this.targetEater)) {
+      return this.targetEater.mouthCenter;
+    }
+    // 대상이 카메라에서 사라졌으면 마지막 위치로 연출만 마무리
+    return this.targetEater?.mouthCenter ?? null;
+  }
 
-/** min~max 포함 정수 난수 */
-function randomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  private findEatingEater(eaters: readonly Eater[]): Eater | null {
+    let best: Eater | null = null;
+    let bestDist = 50; // 이 거리 이내만 후보
+
+    for (const eater of eaters) {
+      if (!eater.isMouthOpen) continue;
+      const d = distance(this.centerPos, eater.mouthCenter);
+      if (d <= bestDist) {
+        bestDist = d;
+        best = eater;
+      }
+    }
+    return best;
+  }
 }
