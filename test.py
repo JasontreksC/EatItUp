@@ -7,6 +7,7 @@ Pygame 창으로 바꿔서, 이후 게임 로직(음식 낙하 애니메이션 �
 같은 Pygame 창 위에 자연스럽게 이어 붙일 수 있게 했다.
 
 설치: pip install opencv-python mediapipe pygame numpy
+사운드: pygame.mixer 로 FOOD_EATEN_EVENT 시 sounds/eat.wav 재생
 
 조작: ESC 키 또는 창 닫기 버튼으로 종료.
 """
@@ -106,6 +107,15 @@ def main():
     screen_w = pygame.display.Info().current_w
     screen_h = pygame.display.Info().current_h
 
+    # 먹기 사운드 (pygame.mixer)
+    eat_sound = None
+    try:
+        pygame.mixer.init(frequency=22050, size=-16, channels=1, buffer=512)
+        eat_sound = pygame.mixer.Sound(str(BASE_DIR / "sounds" / "eat.wav"))
+        eat_sound.set_volume(0.7)
+    except pygame.error as e:
+        print(f"사운드 초기화 실패 (무음으로 계속): {e}")
+
     # Timer
     timer = 0
 
@@ -134,6 +144,8 @@ def main():
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 running = False
             elif event.type == events.FOOD_EATEN_EVENT:
+                if eat_sound is not None:
+                    eat_sound.play()
                 score = max(score + event.target_food.healthy, 0)
                 food_pool.remove(event.target_food)
                 print(f"ATE! left foods count: {len(food_pool)}")
