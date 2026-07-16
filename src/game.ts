@@ -21,6 +21,7 @@ import {
 } from "./face";
 import { Food } from "./food";
 import { clamp, distance, randomPick } from "./math";
+import { loadSounds, playEatSound } from "./sound";
 import type { GameUI } from "./ui";
 
 /** public/foods/ 아래 스프라이트. 파일명이 g_면 건강(+1), b_면 정크(-1). */
@@ -75,12 +76,13 @@ export class Game {
   }
 
   async loadAssets(): Promise<void> {
-    await Promise.all(
-      FOOD_FILES.map(async (name) => {
+    await Promise.all([
+      ...FOOD_FILES.map(async (name) => {
         const image = await loadImage(`/foods/${name}`);
         this.foodImages.set(name, image);
       }),
-    );
+      loadSounds(),
+    ]);
   }
 
   start(): void {
@@ -217,6 +219,7 @@ export class Game {
       const event = food.consumeEvent();
 
       if (event?.type === "eaten") {
+        playEatSound();
         if (event.eater) {
           event.eater.addScore(food.healthy);
           this.ui.onScoreGain(event.eater, food.healthy);
