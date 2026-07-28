@@ -64,6 +64,16 @@ export class GameUI {
     }
   }
 
+  /** 게임 종료 시 오버레이 UI 전부 비우기 */
+  clear(): void {
+    for (const id of [...this.startBanners.keys()]) {
+      this.clearStartBanner(id);
+    }
+    this.scoreCards.clear();
+    this.scoreboard.replaceChildren();
+    this.fxRoot.replaceChildren();
+  }
+
   private ensureScoreCard(eater: Eater): void {
     if (this.scoreCards.has(eater.id)) {
       this.updateScoreCard(eater);
@@ -187,20 +197,20 @@ export class GameUI {
       popup,
       { scale: 0.2, opacity: 0, y: 10 },
       {
-        scale: 1.35,
+        scale: 1.45,
         opacity: 1,
-        y: -36,
-        duration: 0.28,
+        y: -40,
+        duration: 0.32,
         ease: "back.out(2.4)",
       },
     );
 
     gsap.to(popup, {
-      scale: 0.7,
+      scale: 0.85,
       opacity: 0,
-      y: -78,
-      duration: 0.4,
-      delay: 0.35,
+      y: -96,
+      duration: 0.55,
+      delay: 0.95,
       ease: "power2.in",
       onComplete: () => popup.remove(),
     });

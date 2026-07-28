@@ -93,6 +93,17 @@ export async function startWebcam(video: HTMLVideoElement): Promise<void> {
   await video.play();
 }
 
+/** 웹캠 트랙을 끄고 video 연결을 해제한다. */
+export function stopWebcam(video: HTMLVideoElement): void {
+  const stream = video.srcObject;
+  if (stream instanceof MediaStream) {
+    for (const track of stream.getTracks()) {
+      track.stop();
+    }
+  }
+  video.srcObject = null;
+}
+
 /**
  * Landmarker 결과에서 얼굴별 FaceSnapshot 배열을 만든다.
  * MediaPipe는 얼굴 ID를 주지 않으므로, 순서/매칭은 game/Eater 쪽에서 한다.

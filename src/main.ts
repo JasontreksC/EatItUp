@@ -8,19 +8,27 @@
  */
 
 import "./style.css";
-import { createFaceLandmarker, startWebcam } from "./face";
+import { createFaceLandmarker, startWebcam, stopWebcam } from "./face";
 import { Game } from "./game";
 import { GameUI } from "./ui";
 
 const overlay = document.querySelector<HTMLDivElement>("#overlay")!;
 const startBtn = document.querySelector<HTMLButtonElement>("#start-btn")!;
+const quitBtn = document.querySelector<HTMLButtonElement>("#quit-btn")!;
 const statusMsg = document.querySelector<HTMLParagraphElement>("#status-msg")!;
 const video = document.querySelector<HTMLVideoElement>("#webcam")!;
 const canvas = document.querySelector<HTMLCanvasElement>("#game")!;
 const uiLayer = document.querySelector<HTMLElement>("#ui-layer")!;
 
+let activeGame: Game | null = null;
+let activeUi: GameUI | null = null;
+
 startBtn.addEventListener("click", () => {
   void startGame();
+});
+
+quitBtn.addEventListener("click", () => {
+  endGame();
 });
 
 async function startGame(): Promise<void> {
@@ -36,7 +44,10 @@ async function startGame(): Promise<void> {
     const game = new Game(canvas, video, landmarker, ui);
     await game.loadAssets();
 
+    activeGame = game;
+    activeUi = ui;
     overlay.hidden = true;
+    quitBtn.hidden = false;
     game.start();
   } catch (error) {
     console.error(error);
@@ -48,4 +59,17 @@ async function startGame(): Promise<void> {
     startBtn.disabled = false;
     startBtn.textContent = "다시 시도";
   }
+}
+
+/** 루프 중단 + 카메라 해제 + 시작 화면 복귀 */
+function endGame(): void {
+  activeGame?.stop();
+  activeUi?.clear();
+  activeGame = null;
+  activeUi = null;
+  stopWebcam(video);
+  quitBtn.hidden = true;
+  overlay.hidden = false;
+  startBtn.disabled = false;
+  startBtn.textContent = "카메라 켜고 시작";
 }

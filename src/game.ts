@@ -20,20 +20,13 @@ import {
   type FaceSnapshot,
 } from "./face";
 import { Food } from "./food";
-import { clamp, distance, randomPick } from "./math";
+import { FOOD_CATALOG } from "./foodCatalog";
+import { clamp, distance, randomFloat, randomPick } from "./math";
 import { loadSounds, playEatSound } from "./sound";
 import type { GameUI } from "./ui";
 
-/** public/foods/ 아래 스프라이트. 파일명이 g_면 건강(+1), b_면 정크(-1). */
-const FOOD_FILES = [
-  "g_salad.png",
-  "g_tomato.png",
-  "b_candy.png",
-  "b_ramen.png",
-] as const;
-
 /** 음식 스폰 간격 (초) */
-const SPAWN_INTERVAL = 4;
+const SPAWN_INTERVAL = 2.2;
 
 /**
  * 기존 Eater 와 새 스냅샷을 같은 사람으로 볼 최대 입 거리(px).
@@ -77,9 +70,9 @@ export class Game {
 
   async loadAssets(): Promise<void> {
     await Promise.all([
-      ...FOOD_FILES.map(async (name) => {
-        const image = await loadImage(`/foods/${name}`);
-        this.foodImages.set(name, image);
+      ...FOOD_CATALOG.map(async (def) => {
+        const image = await loadImage(`/foods/${def.file}`);
+        this.foodImages.set(def.file, image);
       }),
       loadSounds(),
     ]);
@@ -95,6 +88,13 @@ export class Game {
   stop(): void {
     this.running = false;
     cancelAnimationFrame(this.rafId);
+    this.foodPool = [];
+    this.eaterPool = [];
+    // 마지막 프레임이 남아 보이지 않도록 캔버스 비우기
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillStyle = "#0b0d10";
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
   /**
@@ -235,18 +235,20 @@ export class Game {
   }
 
   private spawnFood(): void {
-    const name = randomPick(FOOD_FILES);
-    const image = this.foodImages.get(name);
+    const def = randomPick(FOOD_CATALOG);
+    const image = this.foodImages.get(def.file);
     if (!image) return;
 
-    const healthy = name.startsWith("g") ? 1 : -1;
+    // 건강 음식은 대체로 빠르게, 정크는 대체로 느리게 (겹치는 구간은 약간만)
+    const floatingSpeed =
+      def.healthy > 0 ? randomFloat(75, 130) : randomFloat(28, 55);
+
     this.foodPool.push(
       new Food(
         image,
-        name,
+        def,
         100,
-        healthy,
-        50,
+        floatingSpeed,
         CAM_WIDTH + 10,
         [Math.floor(CAM_HEIGHT * 0.2), Math.floor(CAM_HEIGHT * 0.8)],
       ),
@@ -255,6 +257,10 @@ export class Game {
 
   private draw(): void {
     const { ctx, canvas, video } = this;
+
+    // 축소/확대 시 이미지가 부드럽게 보이도록
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
 
     // 1) 거울 모드 웹캠 배경
     ctx.save();

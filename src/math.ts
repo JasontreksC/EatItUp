@@ -50,6 +50,11 @@ export function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+/** min~max 사이 실수 난수 */
+export function randomFloat(min: number, max: number): number {
+  return min + Math.random() * (max - min);
+}
+
 /** 배열에서 균등 확률로 하나 뽑기 */
 export function randomPick<T>(items: readonly T[]): T {
   return items[randomInt(0, items.length - 1)]!;

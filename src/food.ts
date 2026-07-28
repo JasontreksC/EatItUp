@@ -10,6 +10,7 @@
  */
 
 import type { Eater } from "./eater";
+import type { FoodDef } from "./foodCatalog";
 import { distance, lerp, randomInt, vec2, type Vec2 } from "./math";
 
 export type FoodEvent =
@@ -18,6 +19,8 @@ export type FoodEvent =
 
 export class Food {
   readonly foodName: string;
+  /** 음식 아래 표시용 한국어 이름 */
+  readonly labelKo: string;
   /** +1 건강 / -1 정크. 먹혔을 때 해당 Eater 점수에 더해짐 */
   readonly healthy: number;
   /** 왼쪽으로 흘러가는 속도 (px/초) */
@@ -44,18 +47,18 @@ export class Food {
 
   constructor(
     image: HTMLImageElement,
-    foodName: string,
+    def: FoodDef,
     size: number,
-    healthy: number,
     floatingSpeed: number,
     spawnX: number,
     spawnYRange: [number, number],
   ) {
     this.image = image;
-    this.foodName = foodName;
+    this.foodName = def.file;
+    this.labelKo = def.labelKo;
     this.size = size;
     this.currentSize = size;
-    this.healthy = healthy;
+    this.healthy = def.healthy;
     this.floatingSpeed = floatingSpeed;
     this.centerPos = vec2(spawnX, randomInt(spawnYRange[0], spawnYRange[1]));
   }
@@ -113,16 +116,31 @@ export class Food {
     return event;
   }
 
-  /** 중심 기준으로 정사각 스프라이트 그리기 */
+  /** 스프라이트 + 바로 아래 한국어 이름 */
   draw(ctx: CanvasRenderingContext2D): void {
     const size = Math.max(this.currentSize, 0.1);
-    ctx.drawImage(
-      this.image,
-      this.centerPos.x - size / 2,
-      this.centerPos.y - size / 2,
-      size,
-      size,
-    );
+    const x = this.centerPos.x - size / 2;
+    const y = this.centerPos.y - size / 2;
+
+    ctx.drawImage(this.image, x, y, size, size);
+
+    // 너무 작아지면(흡입 말미) 이름은 생략
+    if (size < this.size * 0.35) return;
+
+    const labelY = this.centerPos.y + size / 2 + 20;
+    const alpha = Math.min(1, size / this.size);
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = "300 22px 'Noto Sans KR', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillStyle = this.healthy > 0 ? "#8ef0a4" : "#ffb4b4";
+    ctx.strokeText(this.labelKo, this.centerPos.x, labelY);
+    ctx.fillText(this.labelKo, this.centerPos.x, labelY);
+    ctx.restore();
   }
 
   private resolveTargetMouth(eaters: readonly Eater[]): Vec2 | null {
