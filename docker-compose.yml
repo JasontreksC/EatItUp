@@ -1,0 +1,11 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: eat-it-up:latest
+    container_name: eat-it-up
+    ports:
+      # 호스트:컨테이너 — 브라우저/ngrok은 이 포트로 접속
+      - "8080:80"
+    restart: unless-stopped

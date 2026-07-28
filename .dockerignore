@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.vscode
+.DS_Store
+*.pxd
+*.task
+__pycache__
+README.md
+Dockerfile
+docker-compose.yml
+.dockerignore
