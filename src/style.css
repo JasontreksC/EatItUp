@@ -218,6 +218,27 @@ body {
   cursor: wait;
 }
 
+.volume-control {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-family: "Noto Sans KR", "Avenir Next", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: rgba(244, 246, 248, 0.82);
+}
+
+.volume-control__label {
+  letter-spacing: 0.04em;
+}
+
+#bgm-volume {
+  width: min(16rem, 72vw);
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 .status-msg {
   font-family: "Avenir Next", "Segoe UI", sans-serif;
   color: #ff8f8f;

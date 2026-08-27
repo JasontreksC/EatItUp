@@ -22,7 +22,7 @@ import {
 import { Food } from "./food";
 import { FOOD_CATALOG } from "./foodCatalog";
 import { clamp, distance, randomFloat, randomPick } from "./math";
-import { loadSounds, playEatSound } from "./sound";
+import { loadSounds, playScoreDownSound, playScoreUpSound } from "./sound";
 import type { GameUI } from "./ui";
 
 /** 음식 스폰 간격 (초) */
@@ -219,7 +219,8 @@ export class Game {
       const event = food.consumeEvent();
 
       if (event?.type === "eaten") {
-        playEatSound();
+        if (food.healthy >= 0) playScoreUpSound();
+        else playScoreDownSound();
         if (event.eater) {
           event.eater.addScore(food.healthy);
           this.ui.onScoreGain(event.eater, food.healthy);
