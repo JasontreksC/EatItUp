@@ -10,11 +10,13 @@
 import "./style.css";
 import { createFaceLandmarker, startWebcam, stopWebcam } from "./face";
 import { Game } from "./game";
+import { getBgmVolume, loadSounds, setBgmVolume, startBgm } from "./sound";
 import { GameUI } from "./ui";
 
 const overlay = document.querySelector<HTMLDivElement>("#overlay")!;
 const startBtn = document.querySelector<HTMLButtonElement>("#start-btn")!;
 const quitBtn = document.querySelector<HTMLButtonElement>("#quit-btn")!;
+const volumeSlider = document.querySelector<HTMLInputElement>("#bgm-volume")!;
 const statusMsg = document.querySelector<HTMLParagraphElement>("#status-msg")!;
 const video = document.querySelector<HTMLVideoElement>("#webcam")!;
 const canvas = document.querySelector<HTMLCanvasElement>("#game")!;
@@ -22,6 +24,14 @@ const uiLayer = document.querySelector<HTMLElement>("#ui-layer")!;
 
 let activeGame: Game | null = null;
 let activeUi: GameUI | null = null;
+
+volumeSlider.value = String(Math.round(getBgmVolume() * 100));
+void loadSounds();
+
+volumeSlider.addEventListener("input", () => {
+  setBgmVolume(Number(volumeSlider.value) / 100);
+  startBgm();
+});
 
 startBtn.addEventListener("click", () => {
   void startGame();
@@ -38,6 +48,8 @@ async function startGame(): Promise<void> {
   startBtn.textContent = "준비 중...";
 
   try {
+    await loadSounds();
+    startBgm();
     await startWebcam(video);
     const landmarker = await createFaceLandmarker();
     const ui = new GameUI(uiLayer);

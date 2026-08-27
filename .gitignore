@@ -1,7 +1,5 @@
 node_modules/
 dist/
-__pycache__/
 .vscode/
 *.pxd
-*.task
 .DS_Store

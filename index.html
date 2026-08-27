@@ -23,6 +23,17 @@
         <h1>Eat It Up</h1>
         <p>얼굴을 비추면 플레이가 시작됩니다. 최대 3명, 입을 벌려 건강한 음식을 먹으세요.</p>
         <button id="start-btn" type="button">카메라 켜고 시작</button>
+        <label class="volume-control" for="bgm-volume">
+          <span class="volume-control__label">배경음악</span>
+          <input
+            id="bgm-volume"
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value="45"
+          />
+        </label>
         <p id="status-msg" class="status-msg" hidden></p>
       </div>
 
