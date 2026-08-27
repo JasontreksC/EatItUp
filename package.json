@@ -1,0 +1,21 @@
+{
+  "name": "eat-it-up",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^0.10.21",
+    "gsap": "^3.15.0",
+    "howler": "^2.2.4"
+  },
+  "devDependencies": {
+    "@types/howler": "^2.2.13",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5"
+  }
+}
